@@ -1,0 +1,66 @@
+/*
+mysql_connect('localhost', 'root');
+if (mysql_errno())
+{
+	die(' Error '.mysql_errno().': '.mysql_error());
+}
+mysql_select_db('test');
+*/
+
+require_once 'oauth-php/library/OAuthDiscovery.php'; 
+require_once 'oauth-php/library/OAuthRequester.php'; 
+require_once 'oauth-php/library/OAuthRequestVerifier.php'; 
+require_once 'oauth-php/library/OAuthServer.php';
+
+$store_options = array('server' => '127.0.0.1', 'username' => 'root',
+                 'password' => '',  'database' => 'oauth');
+ 
+$store = OAuthStore::instance("MySQL", $store_options);
+
+$consumer_key = '8dfc475b57fee5b7dc08cc0f1d5a0fcdab409b3d';
+$user_id = 1;
+ 
+$store = OAuthStore::instance("MySQL", $store_options);
+ 
+$server = null; 
+try {
+	$server = $store->getServer($consumer_key, $user_id);
+} catch (OAuthException2 $e) {
+    $server = array(
+        'consumer_key' => $consumer_key,
+        'consumer_secret' => '2TP0meIiyjzYbZO3qaffRJHYP8zJbpDfz7emLtPMKoqFPND0f5QtTnQMkdEGjUB',
+        'server_uri' => 'https://api.elance.com/',
+        'signature_methods' => array('HMAC-SHA1'),
+        'request_token_uri' => 'https://api.elance.com/oauth/getRequestToken',
+        'authorize_uri' => 'https://api.elance.com/oauth/authorizeToken', 
+        'access_token_uri' => 'https://api.elance.com/oauth/getAccessToken'
+    );
+ 
+    $store->updateServer($server, $user_id);
+    
+    $token = OAuthRequester::requestRequestToken($consumer_key, $user_id);
+    
+    $callback_uri = "http://www.example.com/verify-token-callback.php";
+$authorization_uri = $token['authorize_uri'] . '?oauth_token=' . $token['token'] . '&oauth_callback=' . $callback_uri;
+header("Location: " . $authorization_uri);
+exit();
+
+$store_options = array('server' => '127.0.0.1', 'username' => 'root',
+                 'password' => '',  'database' => 'oauth');
+ 
+$store = OAuthStore::instance("MySQL", $store_options);
+
+$consumer_key = '8dfc475b57fee5b7dc08cc0f1d5a0fcdab409b3d';
+$user_id = 1;
+ 
+$options = array();
+$options['oauth_verifier'] = $_GET['oauth_verifier'];
+ 
+try
+{
+    OAuthRequester::requestAccessToken($consumer_key, $_GET['oauth_token'], $user_id, 'POST', $options);
+}
+catch (OAuthException $e)
+{
+	// Handle error
+}
