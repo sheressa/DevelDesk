@@ -1,1 +1,81 @@
-[smeserver-git.git] / root / etc / e-smith / templates / etc / gitweb.conf / 60ExportAuthHook
+
+   2 ####
+   3 # Install a export authorisation hook to ensure Gitweb only list thise projects that the user
+   4 # is authorised to see.
+   5 
+   6 #                               local_unauthorised internet_unauthorised local_authorised internet_authorised
+   7 # internet anonymous pull                Yes                Yes                Yes               
+   8 # local    anonymous pull                Yes                No                 Yes
+   9 # internet && authorised pull            Yes                No                 Yes
+  10 # local    && authorised pull            Yes                No                 Yes
+  11 
+  12 
+  13 
+  14 use esmith::NetworksDB;
+  15 use esmith::GitDB;
+  16 use MIME::Base64;
+  17 use NetAddr::IP;
+  18 
+  19 $export_auth_hook = sub \{
+  20   my $projectdir = shift;
+  21 
+  22   my $repository_view_allowed = 0;  
+  23   my $internet_access_allowed = 0;
+  24   my $host_is_local           = 0; # Will be 1 when the host request is from the local network.
+  25   my $host_request_allowed    = 0; # Will be 1 when the view is allowed based on the current host address and 'allow_access_from' setting
+  26   my $anonymous_pull          = 0; # Will be 1 when the repository does not require pull authorisation
+  27   my $authorised_repository_view_allowed = 0; # Will be 1 when the authorised user has pull permissions on the repository 
+  28 
+  29   if($projectdir =~ (/(.*?)\.git/)) \{
+  30     my $projectname = basename($1);
+  31 
+  32     # Retrieve project properties from database
+  33     my $git_db = esmith::GitDB->open_ro() or
+  34       die "Could not open the Git repository database!\n";
+  35     my $repository = $git_db->get($projectname) or 
+  36       die "The git repository '$projectname' does not seem to exist in the Git repository database!\n";
+  37     my %properties = $repository->props;  
+  38 
+  39     # Check if the request is from a local IP address for this host
+  40     my $networks_db = esmith::NetworksDB->open_ro() or
+  41       die "Could not open the networks database!\n";
+  42     my @network_setting = split(/[\/ ]/, $networks_db->local_access_spec('private'));
+  43     my $remote_addr = NetAddr::IP->new( $ENV\{'REMOTE_ADDR'\} );
+  44     if( $remote_addr->within( new NetAddr::IP @network_setting[1], @network_setting[2] ) ) \{
+  45       $host_is_local = 1;
+  46     \}
+  47 
+  48     # Check the configured network access permissions. 
+  49     if ($properties\{'allow_access_from'\}) \{
+  50       if ($properties\{'allow_access_from'\} eq 'internet') \{
+  51         $internet_access_allowed = 1;
+  52       \}
+  53     \}
+  54 
+  55     # Check the configured access permissions for pull access
+  56     if( ($properties\{'pull_groups'\} eq '') && ($properties\{'pull_users'\} eq '') ) \{
+  57       $anonymous_pull = 1;
+  58     \}
+  59 
+  60     # Check if we have:
+  61     # a) a user that is listed in the repository pull or push permissions
+  62     # b) valid credentials i.e password can be validated.
+  63     if( $ENV\{'HTTP_AUTHORIZATION'\} ) \{
+  64       my @http_authorisation = split(/ /, $ENV\{'HTTP_AUTHORIZATION'\} );
+  65       my @http_digest = split( /:/, decode_base64( @http_authorisation[1] ) );
+  66       if( @http_digest[0] = 'nobody' ) \{
+  67         #die "User '@http_digest[0]' Password '@http_digest[1]' @network_setting[0]-@network_setting[1]-@network_setting[2] \n";
+  68       \}
+  69     \}
+  70 
+  71   \}
+  72 
+  73   # local host are allowed to see all repositories
+  74   if( $host_is_local ) \{
+  75      $repository_view_allowed = 1;
+  76   \} elsif( $internet_access_allowed && $anonymous_pull ) \{
+  77      $repository_view_allowed = 1; 
+  78   \};
+  79   
+  80   return ( $repository_view_allowed );
+  81 \};
