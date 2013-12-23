@@ -1,0 +1,33 @@
+<?php
+ 
+require_once 'oauth-php/library/OAuthDiscovery.php'; 
+require_once 'oauth-php/library/OAuthRequester.php'; 
+require_once 'oauth-php/library/OAuthRequestVerifier.php'; 
+require_once 'oauth-php/library/OAuthServer.php';
+ 
+$store_options = array('server' => '127.0.0.1', 'username' => 'root',
+                 'password' => '',  'database' => 'oauth');
+ 
+$user_id = 1;
+ 
+$store = OAuthStore::instance("MySQL", $store_options);
+ 
+$options = array( 'debug' => 'true');
+$manage_request = new OAuthRequester("https://api.elance.com/api/manage/getJobList", 'GET', $options);
+ 
+$result = "";
+ 
+try {
+    $result = $manage_request->doRequest($user_id);
+} catch (OAuthException $e){
+    // Handle error.
+}
+ 
+/* 
+The output from <span style="font-family:monospace;">doRequest()</span> is the full array of header and body values 
+returned by the cUrl HTTP library. We access the JSON response using the body array key.
+*/
+ 
+echo "<pre>" . $result["body"] . "</pre>";
+ 
+exit();
