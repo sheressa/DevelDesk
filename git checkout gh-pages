@@ -1,0 +1,3 @@
+$ cd your_repo_root/repo_DevelDesk
+$ git fetch origin
+$ git checkout gh-pages
