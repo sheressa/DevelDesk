@@ -1,6 +1,6 @@
 DevelDesk
 =========
 
-website | http://develdesk.com
+website | http://www.textsara.or
 
-Facebook | https://www.facebook.com/develdesk
+Facebook | https://www.facebook.com/textsara.org
