@@ -5,9 +5,9 @@
    5 
    6 #                               local_unauthorised internet_unauthorised local_authorised internet_authorised
    7 # internet anonymous pull                Yes                Yes                Yes               
-   8 # local    anonymous pull                Yes                No                 Yes
-   9 # internet && authorised pull            Yes                No                 Yes
-  10 # local    && authorised pull            Yes                No                 Yes
+   8 # local    anonymous pull                Yes                Yes                Yes
+   9 # internet && authorised pull            Yes                Yes                Yes
+  10 # local    && authorised pull            Yes                Yes                Yes
   11 
   12 
   13 
