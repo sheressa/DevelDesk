@@ -1,3 +1,9 @@
 name: S. A. R. A. 
 #SURVIVORS OF ABUSE RAISING AWARENESS
 MARKDOWN: KRAMDOWN
+
+title: "DevelDesk "
+description: 
+google_analytics: "80301647"
+show_downloads: true
+theme: jekyll-theme-cayman
